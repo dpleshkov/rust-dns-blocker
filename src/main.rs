@@ -39,7 +39,7 @@ async fn poll_resolved_packets(inbound: SharedUdpSocket, outbound: SharedUdpSock
                 buf[1] = (user.used_id & 0xff) as u8;
                 buf[0] = ((user.used_id & 0xff00) >> 8) as u8;
                 let uid = user.used_id;
-                println!("{:?}", buf);
+                println!("{:?}", &buf[..len]);
                 println!("Received {len} bytes response for id {id}. Giving it to ID {uid}.");
                 inbound.send_to(&buf[..len], user.address).await?;
                 users.remove(&id);
@@ -157,7 +157,7 @@ async fn main() -> io::Result<()> {
             while users.contains_key(&rand_id) {
                 rand_id = rand::random::<u16>();
             }
-            println!("{:?}", buf);
+            println!("{:?}", &buf[..len]);
             println!("Received {len} bytes req from {address} with provided id {used_id}. Giving it ID {rand_id}.");
             users.insert(rand_id, user);
             buf[1] = (rand_id & 0xff) as u8;
