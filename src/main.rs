@@ -1,9 +1,9 @@
 use tokio::net::{UdpSocket};
-use tokio::sync::{Mutex};
+//use tokio::sync::{Mutex};
 use std::io;
 use std::net::{Ipv4Addr, SocketAddr};
 use std::collections::HashMap;
-use std::sync::{Arc};
+use std::sync::{Arc, Mutex} ;
 
 struct User {
     address: SocketAddr,
@@ -22,18 +22,22 @@ async fn udp_listen_resolved(inbound: SharedUdpSocket, outbound: SharedUdpSocket
             let id: u16 = ((buf[0] as u16) << 8) + buf[1] as u16;
             println!("received outbound for id {id}");
 
-            let mut guard = users.lock().await;
-            if !guard.contains_key(&id) {
-                continue;
+            let uid: u16;
+            let address: SocketAddr;
+            {
+                let mut guard = users.lock().unwrap();
+                if !guard.contains_key(&id) {
+                    continue;
+                }
+                let user = guard.get(&id).unwrap();
+                buf[1] = (user.used_id & 0xff) as u8;
+                buf[0] = ((user.used_id & 0xff00) >> 8) as u8;
+                uid = user.used_id;
+                address = user.address;
+                // we no longer need user, unlock mutex
+                guard.remove(&id);
             }
-            let user = guard.get(&id).unwrap();
-            buf[1] = (user.used_id & 0xff) as u8;
-            buf[0] = ((user.used_id & 0xff00) >> 8) as u8;
-            let uid = user.used_id;
-            let address = user.address;
-            // we no longer need user, unlock mutex
-            guard.remove(&id);
-            drop(guard);
+
             inbound.send_to(&buf[..len], address).await?;
             println!("{:?}", &buf[..len]);
             println!("Received {len} bytes response for id {id}. Giving it to ID {uid}.");
@@ -69,7 +73,7 @@ async fn main() -> io::Result<()> {
                 used_id
             };
             let mut rand_id = rand::random::<u16>();
-            let mut guard = users.lock().await;
+            let mut guard = users.lock().unwrap();
             while guard.contains_key(&rand_id) {
                 rand_id = rand::random::<u16>();
             }
