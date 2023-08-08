@@ -7,5 +7,4 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-dashmap = "5"
 rand = "0.8.5"
