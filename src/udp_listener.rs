@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 use std::io;
-use tokio::net::UdpSocket;
-use tokio::sync::{mpsc};
-use std::sync::{Arc, Mutex};
 use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
+
+use tokio::net::UdpSocket;
+use tokio::sync::mpsc;
 
 async fn receiver(user_map: Arc<Mutex<HashMap<u16, (u16, SocketAddr)>>>, socket: Arc<UdpSocket>, mut rx: mpsc::Receiver<Vec<u8>>) -> io::Result<()> {
     loop {
@@ -33,7 +34,7 @@ async fn receiver(user_map: Arc<Mutex<HashMap<u16, (u16, SocketAddr)>>>, socket:
 }
 
 
-pub async fn listen(resolver_tx: mpsc::Sender<(Vec<u8>, mpsc::Sender<Vec<u8>>)>) -> io::Result<()> {
+pub async fn listen(nameserver_tx: mpsc::Sender<(Vec<u8>, mpsc::Sender<Vec<u8>>)>) -> io::Result<()> {
     let (tx, rx) = mpsc::channel::<Vec<u8>>(32);
     let socket = Arc::new(UdpSocket::bind("0.0.0.0:53").await?);
     let user_map: Arc<Mutex<HashMap<u16, (u16, SocketAddr)>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -56,7 +57,7 @@ pub async fn listen(resolver_tx: mpsc::Sender<(Vec<u8>, mpsc::Sender<Vec<u8>>)>)
             }
             buf[1] = (rand_id & 0xff) as u8;
             buf[0] = ((rand_id & 0xff00) >> 8) as u8;
-            resolver_tx.send((buf, tx.clone())).await.expect("Error sending message");
+            nameserver_tx.send((buf, tx.clone())).await.expect("Error sending message");
         }
     }
 }

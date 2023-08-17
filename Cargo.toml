@@ -11,3 +11,8 @@ rand = "0.8.5"
 hyper = { version = "0.14", features = ["full"] }
 rustls = "0.21"
 hyper-rustls = {version = "0.24.1", features = ["http2", "default"]}
+tokio-rustls = "0.24.1"
+webpki-roots = "0"
+rustls-pemfile = "1"
+url = "2"
+base64 = "0"

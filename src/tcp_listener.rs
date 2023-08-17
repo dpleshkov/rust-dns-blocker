@@ -1,11 +1,12 @@
 use std::cmp::min;
-use std::io;
-use tokio::sync::{mpsc, oneshot};
-use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
-use tokio::io::{AsyncWriteExt, AsyncReadExt};
+use std::io;
+use std::sync::{Arc, Mutex};
+
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::net::tcp::OwnedWriteHalf;
+use tokio::sync::{mpsc, oneshot};
 
 async fn callback_loop(mut socket: OwnedWriteHalf, mut callback_rx: mpsc::Receiver<Vec<u8>>, mut shutdown_rx: oneshot::Receiver<()>, id_map: Arc<Mutex<HashMap<u16, u16>>>) -> io::Result<()> {
     let mut len_buf = vec![0u8; 2];
@@ -95,10 +96,10 @@ async fn process_socket(socket: TcpStream, resolver_tx: mpsc::Sender<(Vec<u8>, m
     }
 }
 
-pub async fn listen(resolver_tx: mpsc::Sender<(Vec<u8>, mpsc::Sender<Vec<u8>>)>) -> io::Result<()> {
+pub async fn listen(nameserver_tx: mpsc::Sender<(Vec<u8>, mpsc::Sender<Vec<u8>>)>) -> io::Result<()> {
     let listener = TcpListener::bind("0.0.0.0:53").await?;
     loop {
         let (socket, _) = listener.accept().await?;
-        tokio::spawn(process_socket(socket, resolver_tx.clone()));
+        tokio::spawn(process_socket(socket, nameserver_tx.clone()));
     }
 }
