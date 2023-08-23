@@ -522,6 +522,7 @@ dependencies = [
  "rand",
  "rustls",
  "rustls-pemfile",
+ "simple-dns",
  "tokio",
  "tokio-rustls",
  "url",
@@ -632,6 +633,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8229b473baa5980ac72ef434c4415e70c4b5e71b423043adb4ba059f89c99a1"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "simple-dns"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e3b154a5a073c507d1dd35e2cb454ed499d2216f1305cba4f597b4b64a9c141"
+dependencies = [
+ "bitflags",
 ]
 
 [[package]]

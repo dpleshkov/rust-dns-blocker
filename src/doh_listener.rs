@@ -114,7 +114,6 @@ pub async fn listen(nameserver_tx: QuerySender) -> io::Result<()> {
         }
     });
 
-
     let server = Server::builder(acceptor)
         .serve(make_svc);
 

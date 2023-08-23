@@ -4,6 +4,7 @@ use hyper::{Body, Client, Request, Method};
 use hyper::client::HttpConnector;
 use hyper_rustls;
 use hyper_rustls::HttpsConnector;
+use simple_dns;
 
 async fn resolve(client: Client<HttpsConnector<HttpConnector>, Body>, message: Vec<u8>, tx: mpsc::Sender<Vec<u8>>) -> io::Result<()> {
     let req = Request::builder()
@@ -29,7 +30,12 @@ pub async fn resolver(mut rx: mpsc::Receiver<(Vec<u8>, mpsc::Sender<Vec<u8>>)>) 
 
     loop {
         if let Some(message) = rx.recv().await {
-            tokio::spawn(resolve(client.clone(), message.0, message.1));
+            if let Ok(packet) = simple_dns::Packet::parse(&message.0) {
+                for question in packet.questions.iter() {
+                    println!("{}", question.qname.get_labels()[0].to_string());
+                }
+                tokio::spawn(resolve(client.clone(), message.0, message.1));
+            }
         }
     }
 }
