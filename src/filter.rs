@@ -1,29 +1,34 @@
-use std::collections::HashMap;
-use simple_dns;
+use std::fs::{read_to_string};
+use std::collections::HashSet;
+use std::io;
 
-struct MaybeContainer {
-    container: Option<Box<Container>>
-}
-
-type Container = HashMap<String, MaybeContainer>;
-
-struct Filter {
-    root: Container
+pub struct Filter {
+    names: HashSet<String>
 }
 
 impl Filter {
     pub fn new() -> Self {
-        Filter {
-            root: HashMap::new()
+        return Filter {
+            names: HashSet::new()
         }
     }
-    pub fn add(&mut self, element: Vec<String>) {
-        let mut cur = &mut(self.root);
-        for segment in element.iter().rev() {
-            if !cur.contains_key(segment) {
-                cur.insert(segment.clone(), MaybeContainer{container: Some(Box::new(Container::new()))});
+
+    pub fn add_file(&mut self, file_path: &str) -> io::Result<()> {
+        for line in read_to_string(file_path).expect("Failed reading file").lines() {
+            if line.starts_with('#') {
+                continue;
             }
-            cur = cur.get_mut(segment).unwrap().container.unwrap();
+            let mut split = line.split(' ');
+            split.next();
+            if let Some(name) = split.next() {
+                //println!("{}", name);
+                self.names.insert(name.parse().unwrap());
+            }
         }
+        Ok(())
+    }
+
+    pub fn contains(&self, name: &String) -> bool {
+        self.names.contains(name)
     }
 }

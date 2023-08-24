@@ -1,5 +1,6 @@
 use tokio::sync::{mpsc};
 use std::io;
+use std::sync::Arc;
 
 mod resolver;
 mod udp_listener;
@@ -17,7 +18,10 @@ async fn main() -> io::Result<()> {
     tokio::spawn(tcp_listener::listen(tx.clone()));
     tokio::spawn(doh_listener::listen(tx.clone()));
 
-    resolver::resolver(rx).await?;
+    let mut filter = filter::Filter::new();
+    filter.add_file("./resources/ads.txt")?;
+
+    resolver::resolver(rx, Arc::new(filter)).await?;
 
     return Ok(());
 }
